@@ -1,7 +1,9 @@
 const path = require('path')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
+const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const ManifestPlugin = require('webpack-manifest-plugin')
 const merge = require('webpack-merge')
 
@@ -37,7 +39,7 @@ const pages = [
 const baseConf = {
   entry,
   output: {
-    filename: dev ? 'js/[name].js' : 'js/[name].[chunkhash:8].js',
+    filename: dev ? 'js/[name].js' : 'js/[name].[contenthash:8].js',
     path: path.resolve(__dirname, 'dist'),
     publicPath: '/'
   },
@@ -151,7 +153,14 @@ const prodConf = {
   mode: 'production',
   devtool: 'source-map',
   optimization: {
-    minimize: true,
+    minimizer: [
+      new UglifyJsPlugin({
+        cache: true,
+        parallel: true,
+        sourceMap: true
+      }),
+      new OptimizeCSSAssetsPlugin({})
+    ],
     splitChunks: {
       chunks: 'all',
       cacheGroups: {
@@ -165,6 +174,13 @@ const prodConf = {
           test: /[\\/]node_modules[\\/]/,
           priority: -10,
           name: 'vendors'
+        },
+        styles: {
+          minChunks: 2,
+          test: /\.css$/,
+          name: 'styles',
+          chunks: 'all',
+          enforce: true
         }
       }
     },
@@ -174,32 +190,30 @@ const prodConf = {
     rules: [
       {
         test: /\.css$/,
-        use: ExtractTextPlugin.extract({
-          fallback: 'style-loader',
-          use: [
-            {
-              loader: 'css-loader',
-              options: {
-                sourceMap: true,
-                minimize: true,
-                importLoaders: 1
-              }
-            },
-            {
-              loader: 'postcss-loader',
-              options: {
-                sourceMap: true
-              }
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: 'css-loader',
+            options: {
+              sourceMap: true,
+              minimize: true,
+              importLoaders: 1
             }
-          ]
-        })
+          },
+          {
+            loader: 'postcss-loader',
+            options: {
+              sourceMap: true
+            }
+          }
+        ]
       }
     ]
   },
   plugins: [
-    new ExtractTextPlugin({
-      filename: 'css/[name].[contenthash:8].css'
-      // allChunks: true
+    new MiniCssExtractPlugin({
+      filename: 'css/[name]_[contenthash:8].css'
+      // chunkFilename: 'css/[id]_[contenthash:8].css'
     }),
     new ManifestPlugin({
       filter (file) {
@@ -220,6 +234,5 @@ const prodConf = {
 }
 
 const config = dev ? merge(baseConf, devConf) : merge(baseConf, prodConf)
-console.log(config)
 
 module.exports = config
