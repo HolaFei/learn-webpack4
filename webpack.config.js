@@ -5,6 +5,7 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const UglifyJsPlugin = require('uglifyjs-webpack-plugin')
 const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 const ManifestPlugin = require('webpack-manifest-plugin')
+const StyleLintPlugin = require('stylelint-webpack-plugin')
 const merge = require('webpack-merge')
 
 const mockHandler = require('./mockHandler')
@@ -27,21 +28,20 @@ const entry = {
 const pages = [
   new HtmlWebpackPlugin({
     template: 'src/index.html',
-    chunks: ['index', 'polyfill', 'vendors', 'common']
+    chunks: ['runtime', 'vendor', 'polyfill', 'commons', 'index']
   }),
   new HtmlWebpackPlugin({
     filename: 'about.html',
     template: 'src/about.html',
-    chunks: ['about', 'polyfill', 'vendors', 'common']
+    chunks: ['runtime', 'vendor', 'polyfill', 'commons', 'about']
   })
 ]
 
 const baseConf = {
   entry,
   output: {
-    filename: dev ? 'js/[name].js' : 'js/[name].[contenthash:8].js',
-    path: path.resolve(__dirname, 'dist'),
-    publicPath: '/'
+    filename: dev ? 'js/[name].js' : 'js/[name]-[contenthash:8].js',
+    path: path.resolve(__dirname, 'dist')
   },
   module: {
     rules: [
@@ -74,7 +74,7 @@ const baseConf = {
             loader: 'url-loader',
             options: {
               limit: 8192,
-              name: dev ? '[name].[ext]' : '[name]_[hash:8].[ext]',
+              name: dev ? '[name].[ext]' : '[name]-[hash:8].[ext]',
               outputPath: 'img/'
             }
           }
@@ -86,7 +86,7 @@ const baseConf = {
           {
             loader: 'file-loader',
             options: {
-              name: dev ? '[name].[ext]' : '[name]_[hash:8].[ext]',
+              name: dev ? '[name].[ext]' : '[name]-[hash:8].[ext]',
               outputPath: 'font/'
             }
           }
@@ -101,7 +101,10 @@ const baseConf = {
     ]
   },
   plugins: [
-    ...pages
+    ...pages,
+    new StyleLintPlugin({
+      files: '**/*.css'
+    })
   ]
 }
 
@@ -153,6 +156,7 @@ const prodConf = {
   mode: 'production',
   devtool: 'source-map',
   optimization: {
+    minimize: false,
     minimizer: [
       new UglifyJsPlugin({
         cache: true,
@@ -164,39 +168,42 @@ const prodConf = {
     splitChunks: {
       chunks: 'all',
       cacheGroups: {
-        default: {
+        default: false,
+        commons: {
+          name: 'commons',
           minChunks: 2,
-          priority: -20,
-          reuseExistingChunk: true,
-          name: 'common'
+          maxInitialRequests: 5,
+          minSize: 0
         },
-        vendors: {
-          test: /[\\/]node_modules[\\/]/,
-          priority: -10,
-          name: 'vendors'
-        },
-        styles: {
-          minChunks: 2,
-          test: /\.css$/,
-          name: 'styles',
-          chunks: 'all',
+        vendor: {
+          // test: /[\\/]node_modules[\\/]/,
+          test: /node_modules/,
+          name: 'vendor',
+          priority: 10,
           enforce: true
         }
       }
     },
-    runtimeChunk: false
+    runtimeChunk: {
+      name: 'runtime'
+    }
   },
   module: {
     rules: [
       {
         test: /\.css$/,
         use: [
-          MiniCssExtractPlugin.loader,
+          {
+            loader: MiniCssExtractPlugin.loader,
+            options: {
+              publicPath: '../'
+            }
+          },
           {
             loader: 'css-loader',
             options: {
               sourceMap: true,
-              minimize: true,
+              // minimize: true,
               importLoaders: 1
             }
           },
@@ -211,8 +218,9 @@ const prodConf = {
     ]
   },
   plugins: [
+    new webpack.HashedModuleIdsPlugin(),
     new MiniCssExtractPlugin({
-      filename: 'css/[name]_[contenthash:8].css'
+      filename: 'css/[name]-[contenthash:8].css'
       // chunkFilename: 'css/[id]_[contenthash:8].css'
     }),
     new ManifestPlugin({
@@ -221,11 +229,9 @@ const prodConf = {
       },
       map (file) {
         if (/\.js$/.test(file.name)) {
-          file.name = `/js/${file.name}`
+          file.name = `js/${file.name}`
         } else if (/\.css$/.test(file.name)) {
-          file.name = `/css/${file.name}`
-        } else if (/^img\//.test(file.name)) {
-          file.name = `/${file.name}`
+          file.name = `css/${file.name}`
         }
         return file
       }
