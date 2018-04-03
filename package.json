@@ -6,10 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --progress",
-    "previewDev": "cross-env NODE_ENV=development rimraf dist && webpack --progress",
-    "build": "cross-env NODE_ENV=production rimraf dist && webpack --progress",
+    "previewDev": "cross-env NODE_ENV=development webpack --progress",
+    "build": "cross-env NODE_ENV=production webpack --progress",
     "serveDist": "http-server ./dist",
-    "start": "npm run dev"
+    "server": "http-server"
   },
   "keywords": [],
   "author": "",
@@ -20,6 +20,8 @@
     "babel-loader": "^7.1.4",
     "babel-preset-env": "^1.6.1",
     "body-parser": "^1.18.2",
+    "chalk": "^2.3.2",
+    "clean-webpack-plugin": "^0.1.19",
     "cross-env": "^5.1.4",
     "css-loader": "^0.28.11",
     "eslint": "^4.19.1",
