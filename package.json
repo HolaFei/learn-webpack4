@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --progress",
+    "dev": "cross-env NODE_ENV=development webpack-dev-server --inline --progress --host 0.0.0.0",
     "previewDev": "cross-env NODE_ENV=development webpack --progress",
     "build": "cross-env NODE_ENV=production webpack --progress",
     "serveDist": "http-server ./dist",

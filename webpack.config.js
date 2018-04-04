@@ -196,6 +196,7 @@ module.exports = async (env, argv) => {
       clientLogLevel: 'error',
       stats: 'errors-only',
       hot: true,
+      disableHostCheck: true,
       before: app => {
         app.use(bodyParser.json())
         app.use(bodyParser.urlencoded({extended: true}))
