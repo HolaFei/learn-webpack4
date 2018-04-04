@@ -43,6 +43,11 @@ const baseConf = {
     filename: dev ? 'js/[name].js' : 'js/[name]-[contenthash:8].js',
     path: path.resolve(__dirname, 'dist')
   },
+  resolve: {
+    alias: {
+      'vue$': 'vue/dist/vue.esm.js'
+    }
+  },
   module: {
     rules: [
       {
