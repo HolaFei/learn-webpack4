@@ -103,7 +103,7 @@ const baseConf = {
   plugins: [
     ...pages,
     new StyleLintPlugin({
-      files: '**/*.css'
+      files: 'src/**/*.css'
     })
   ]
 }
