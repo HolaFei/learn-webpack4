@@ -8,8 +8,7 @@ const ManifestPlugin = require('webpack-manifest-plugin')
 const StyleLintPlugin = require('stylelint-webpack-plugin')
 const CleanWebpackPlugin = require('clean-webpack-plugin')
 const merge = require('webpack-merge')
-
-const mockHandler = require('./mockHandler')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 const chalk = require('chalk')
 const log = console.log
@@ -18,6 +17,8 @@ const util = require('util')
 const fs = require('fs')
 const readDir = util.promisify(fs.readdir)
 const stat = util.promisify(fs.stat)
+const bodyParser = require('body-parser')
+const asyncReadFile = util.promisify(fs.readFile)
 
 module.exports = async (env, argv) => {
   if (!env || !env.proj) {
@@ -190,7 +191,19 @@ module.exports = async (env, argv) => {
       clientLogLevel: 'error',
       stats: 'errors-only',
       hot: true,
-      before: mockHandler
+      before: app => {
+        app.use(bodyParser.json())
+        app.use(bodyParser.urlencoded({extended: true}))
+        app.use('/data', async (req, res, next) => {
+          const file = path.resolve(__dirname, `src/${projDir}`, `data${req.path}`)
+          try {
+            const fileData = await asyncReadFile(file, 'utf8')
+            res.json(JSON.parse(fileData))
+          } catch (e) {
+            res.status(50001).json({err: e.stack})
+          }
+        })
+      }
     },
     module: {
       rules: [
@@ -230,7 +243,7 @@ module.exports = async (env, argv) => {
     mode: 'production',
     devtool: 'source-map',
     optimization: {
-      minimize: false,
+      minimize: true,
       minimizer: [
         new UglifyJsPlugin({
           cache: true,
@@ -298,6 +311,12 @@ module.exports = async (env, argv) => {
         filename: 'css/[name]-[contenthash:8].css'
         // chunkFilename: 'css/[id]_[contenthash:8].css'
       }),
+      new CopyWebpackPlugin([
+        {
+          from: path.resolve(__dirname, `src/${projDir}/data`),
+          to: `${outputPath}/data`
+        }
+      ]),
       new ManifestPlugin({
         filter (file) {
           return !((/\.map$/.test(file.name)) || (/\.html$/.test(file.name)))
