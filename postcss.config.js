@@ -1,7 +1,11 @@
 module.exports = {
   plugins: {
     'postcss-import': {},
-    'postcss-cssnext': {},
+    'postcss-cssnext': {
+      features: {
+        rem: false
+      }
+    },
     'postcss-sorting': {
       'order': [
         'custom-properties',
