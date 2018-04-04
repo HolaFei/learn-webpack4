@@ -178,7 +178,7 @@ module.exports = async (env, argv) => {
     plugins: [
       ...pages,
       new StyleLintPlugin({
-        files: '**/*.css'
+        files: 'src/**/*.css'
       })
     ]
   }
