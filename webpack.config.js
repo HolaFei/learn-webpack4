@@ -118,6 +118,11 @@ module.exports = async (env, argv) => {
       filename: dev ? 'js/[name].js' : 'js/[name]-[contenthash:8].js',
       path: outputPath
     },
+    resolve: {
+      alias: {
+        'vue$': 'vue/dist/vue.esm.js'
+      }
+    },
     module: {
       rules: [
         {
