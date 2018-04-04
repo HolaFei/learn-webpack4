@@ -319,7 +319,7 @@ module.exports = async (env, argv) => {
       ]),
       new ManifestPlugin({
         filter (file) {
-          return !((/\.map$/.test(file.name)) || (/\.html$/.test(file.name)))
+          return !((/\.map$/.test(file.name)) || (/\.html$/.test(file.name)) || (/\.json$/.test(file.name)))
         },
         map (file) {
           if (/\.js$/.test(file.name)) {
