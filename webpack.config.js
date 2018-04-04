@@ -121,6 +121,7 @@ const devConf = {
     clientLogLevel: 'error',
     stats: 'errors-only',
     hot: true,
+    disableHostCheck: true,
     before: mockHandler
   },
   module: {
